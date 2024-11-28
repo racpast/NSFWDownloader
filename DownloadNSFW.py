@@ -1,10 +1,12 @@
 import os
+import sys
 import json
 import requests
 import time
 import urllib.request
 import zipfile
 import shutil
+from pathlib import Path
 
 def Mkdir(path): # path是指定文件夹路径
     if os.path.isdir(path):
@@ -16,9 +18,9 @@ def Mkdir(path): # path是指定文件夹路径
 def update_pixiv_index():
     # 定义API URL和文件路径
     api_url = "https://api.github.com/repos/Mabbs/pixiv-index/git/refs/heads/main"
-    current_sha_file = os.path.join(os.path.dirname(__file__), 'pixiv-index-sha')
-    zip_file = os.path.join(os.path.dirname(__file__), 'main.zip')
-    extract_dir = os.path.join(os.path.dirname(__file__), 'main')
+    current_sha_file = os.path.join(current_directory, 'pixiv-index-sha')
+    zip_file = os.path.join(current_directory, 'main.zip')
+    extract_dir = os.path.join(current_directory, 'main')
     newdata_dir = os.path.join(extract_dir, 'pixiv-index-main', 'data')
  
     # 发起GET请求获取最新的SHA
@@ -43,7 +45,6 @@ def update_pixiv_index():
         print(f"SHA不匹配。当前SHA: {current_sha}, 最新SHA: {latest_sha}. 下载新的主分支源码压缩包。")
  
         # 下载ZIP文件
-        proxy_url = 'https://ghproxy.cc/'
         file_url = 'https://github.com/Mabbs/pixiv-index/archive/refs/heads/main.zip'
         full_url = proxy_url + file_url
         # 使用 requests.get 下载文件
@@ -72,12 +73,12 @@ def update_pixiv_index():
  
         # 更新数据文件
         try:
-            shutil.rmtree(os.path.join(os.path.dirname(__file__), data_folder))
-            shutil.rmtree(os.path.join(os.path.dirname(__file__), data_downloaded_folder))
-            shutil.rmtree(os.path.join(os.path.dirname(__file__), data_error_folder))
+            shutil.rmtree(os.path.join(current_directory, data_folder))
+            shutil.rmtree(os.path.join(current_directory, data_downloaded_folder))
+            shutil.rmtree(os.path.join(current_directory, data_error_folder))
             Mkdir(data_downloaded_folder)
             Mkdir(data_error_folder)
-            shutil.copytree(newdata_dir, os.path.join(os.path.dirname(__file__), data_folder))
+            shutil.copytree(newdata_dir, os.path.join(current_directory, data_folder))
             print(f"成功更新数据文件。")
             shutil.rmtree(extract_dir)
         except OSError as e:
@@ -139,6 +140,9 @@ if __name__ == '__main__':
     download_folder = 'download' #存放所下载的图片的文件夹
     data_downloaded_folder = 'data_downloaded' #存放已下载的 json 文件的文件夹
     pixivimgrp = 'https://i.yuki.sh' #此处根据情况填写反代地址
+    proxy_url = 'https://ghproxy.cc/'
+    executable_path = Path(sys.argv[0]).resolve()
+    current_directory = executable_path.parent
     headers = {
         #根据情况调整
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0'
